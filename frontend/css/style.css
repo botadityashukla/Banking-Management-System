@@ -1,0 +1,483 @@
+/* ==============================================================================
+   GLOBALTRUST BANK - DESIGN SYSTEM & STYLESHEET
+   Aesthetic: Professional, restrained financial product (No AI vibe-coding)
+   ============================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    /* Brand & Banking Palette */
+    --bank-navy-dark: #07182c;
+    --bank-navy: #0a2540;
+    --bank-navy-light: #12345a;
+    --bank-blue: #0066cc;
+    --bank-blue-hover: #0052a3;
+    
+    /* Neutrals */
+    --surface-bg: #f8fafc;
+    --surface-card: #ffffff;
+    --border-subtle: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    
+    /* Semantic Status */
+    --color-success: #0d8a4e;
+    --color-success-bg: #f0fdf4;
+    --color-success-border: #bbf7d0;
+    
+    --color-danger: #dc2626;
+    --color-danger-bg: #fef2f2;
+    --color-danger-border: #fecaca;
+    
+    --color-warning: #b45309;
+    --color-warning-bg: #fffbeb;
+    --color-warning-border: #fde68a;
+
+    --color-info: #0284c7;
+    --color-info-bg: #f0f9ff;
+    --color-info-border: #bae6fd;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+    --shadow-hover: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.06);
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+
+    /* Animation Timing */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Setup */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--surface-bg);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main, .main-content {
+    flex: 1 0 auto;
+}
+
+footer {
+    flex-shrink: 0;
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.font-monospace {
+    font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* Navigation Bar */
+.navbar-bank {
+    background-color: var(--bank-navy-dark) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.75rem 0;
+}
+
+.navbar-bank .navbar-brand {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.navbar-bank .nav-link {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.5rem 0.85rem;
+    border-radius: 6px;
+    transition: all var(--transition-fast);
+}
+
+.navbar-bank .nav-link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.navbar-bank .nav-link.active {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.12);
+    font-weight: 600;
+}
+
+.role-badge {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 0.28rem 0.55rem;
+    border-radius: 4px;
+}
+
+/* Core Card Component with Requirement 3: Meaningful Elevate on Hover */
+.bank-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    box-shadow: var(--shadow-card);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.bank-card-interactive {
+    cursor: pointer;
+}
+
+/* The card visually "stands out" / "ubharna" on hover */
+.bank-card-interactive:hover, .bank-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border-strong);
+}
+
+/* Account Balances Card */
+.account-card {
+    background: #ffffff;
+    border: 1px solid var(--border-subtle);
+    border-left: 4px solid var(--bank-blue);
+    border-radius: 10px;
+    padding: 1.5rem;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.account-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: #94a3b8;
+    border-left-color: var(--bank-navy);
+}
+
+.account-card .balance-amount {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--bank-navy-dark);
+    letter-spacing: -0.03em;
+}
+
+/* Quick Action Tiles */
+.quick-action-card {
+    background: #ffffff;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.quick-action-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--bank-blue);
+    color: var(--bank-blue);
+}
+
+.quick-action-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background-color: var(--surface-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    color: var(--bank-navy);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.quick-action-card:hover .quick-action-icon {
+    background-color: #e0f2fe;
+    color: var(--bank-blue);
+}
+
+/* Tables Styling with Row Hover Highlighting */
+.bank-table-wrapper {
+    background: #ffffff;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.bank-table {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.bank-table thead th {
+    background-color: #f8fafc;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.bank-table tbody td {
+    padding: 0.95rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.bank-table tbody tr {
+    transition: background-color var(--transition-fast);
+}
+
+.bank-table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+.tx-amount-positive {
+    color: var(--color-success);
+    font-weight: 600;
+}
+
+.tx-amount-negative {
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
+/* Forms & Inputs */
+.form-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+.form-control, .form-select {
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.925rem;
+    color: var(--text-primary);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--bank-blue);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+    outline: none;
+}
+
+/* Buttons */
+.btn-bank-primary {
+    background-color: var(--bank-blue);
+    border-color: var(--bank-blue);
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 6px;
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-bank-primary:hover {
+    background-color: var(--bank-blue-hover);
+    border-color: var(--bank-blue-hover);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.btn-bank-primary:active {
+    transform: translateY(0);
+}
+
+.btn-bank-dark {
+    background-color: var(--bank-navy-dark);
+    border-color: var(--bank-navy-dark);
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 6px;
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-bank-dark:hover {
+    background-color: var(--bank-navy);
+    border-color: var(--bank-navy);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* Security Alerts & Badges */
+.badge-status-active {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+    border: 1px solid var(--color-success-border);
+    font-weight: 600;
+}
+
+.badge-status-disabled {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger-border);
+    font-weight: 600;
+}
+
+.badge-status-locked {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+    border: 1px solid var(--color-warning-border);
+    font-weight: 600;
+}
+
+.badge-outcome-success {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+    border: 1px solid var(--color-success-border);
+}
+
+.badge-outcome-failure {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger-border);
+}
+
+.badge-outcome-warning {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+    border: 1px solid var(--color-warning-border);
+}
+
+/* Security Dashboard Components */
+.stat-widget {
+    background: #ffffff;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.stat-widget:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-widget-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+
+.stat-widget-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--bank-navy-dark);
+    line-height: 1.2;
+}
+
+/* Masked sensitive field with toggle */
+.masked-field-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mask-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    transition: color var(--transition-fast);
+}
+
+.mask-toggle-btn:hover {
+    color: var(--bank-blue);
+}
+
+/* Modal and Alert styling */
+.modal-content {
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    box-shadow: var(--shadow-hover);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-subtle);
+    background-color: #f8fafc;
+    padding: 1rem 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-subtle);
+    padding: 1rem 1.5rem;
+}
+
+/* Toast container */
+.bank-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1080;
+    min-width: 300px;
+    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    box-shadow: var(--shadow-hover);
+    padding: 1rem 1.25rem;
+    display: none;
+    animation: toastSlideUp 0.25s ease-out forwards;
+}
+
+@keyframes toastSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .account-card .balance-amount {
+        font-size: 1.5rem;
+    }
+    .bank-table-wrapper {
+        border-radius: 6px;
+    }
+    .bank-table th, .bank-table td {
+        padding: 0.65rem 0.75rem;
+    }
+}

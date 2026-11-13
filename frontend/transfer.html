@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Funds - GlobalTrust Bank</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <div id="navbar-container"></div>
+
+    <main class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                
+                <div class="card bank-card p-4 p-md-5">
+                    
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3 p-3 mb-2">
+                            <i class="bi bi-arrow-left-right fs-3"></i>
+                        </div>
+                        <h4 class="fw-bold mb-1" style="color: var(--bank-navy-dark);">Transfer Funds</h4>
+                        <p class="text-muted small mb-0">ACID-compliant fund transfer with database row locking</p>
+                    </div>
+
+                    <div id="alertMsg" class="alert d-none small mb-4" role="alert"></div>
+
+                    <form id="transferForm" autocomplete="off">
+                        
+                        <!-- Source Account -->
+                        <div class="mb-3">
+                            <label class="form-label">Source Account (Debit)</label>
+                            <select class="form-select" id="fromAccount" required>
+                                <option value="" disabled selected>Loading available accounts...</option>
+                            </select>
+                            <div class="form-text small" id="sourceBalanceHint">Available balance will be displayed once selected.</div>
+                        </div>
+
+                        <!-- Destination Account -->
+                        <div class="mb-3">
+                            <label class="form-label">Destination Account (Credit)</label>
+                            <input type="text" class="form-control" id="toAccount" placeholder="e.g. ACC1002" required>
+                            <div class="form-text small">Enter recipient's full account number.</div>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="mb-3">
+                            <label class="form-label">Transfer Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="amount" min="1" step="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <!-- Remarks -->
+                        <div class="mb-4">
+                            <label class="form-label">Description / Remarks</label>
+                            <input type="text" class="form-control" id="description" placeholder="e.g. Monthly rent, utility payment">
+                        </div>
+
+                        <!-- Submit Review Button -->
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-bank-primary py-2 fw-semibold" id="reviewBtn" onclick="openReviewModal()">
+                                Review Transfer &rarr;
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Transfer Review & Confirmation Modal (Mandatory UX Step) -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-shield-check text-primary me-2"></i>Review & Confirm Transfer
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">Please verify the transaction details carefully before final execution:</p>
+                    
+                    <div class="p-3 bg-light rounded border mb-3">
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">From Account:</span>
+                            <span class="fw-bold font-monospace" id="reviewFromAcc">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">To Account:</span>
+                            <span class="fw-bold font-monospace" id="reviewToAcc">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">Transfer Amount:</span>
+                            <span class="fw-bold text-success fs-6" id="reviewAmount">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-muted">Description:</span>
+                            <span class="text-dark" id="reviewDesc">-</span>
+                        </div>
+                    </div>
+
+                    <div class="small text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i>Database row locking (<code>FOR UPDATE</code>) will ensure consistency during debit and credit.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Modify Details</button>
+                    <button type="button" class="btn btn-bank-primary" id="confirmTransferBtn" onclick="executeTransfer()">
+                        Confirm & Send Funds
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        requireAuth();
+        const user = getCurrentUser();
+        let userAccounts = [];
+
+        async function populateAccounts() {
+            try {
+                const customerId = user.customerId || 1;
+                const res = await apiCall(`/api/customers/${customerId}/accounts`);
+                userAccounts = res.accounts || [];
+
+                const select = document.getElementById('fromAccount');
+                select.innerHTML = '<option value="" disabled selected>Select sending account</option>';
+
+                userAccounts.forEach(acc => {
+                    if (acc.Status === 'Active') {
+                        select.innerHTML += `
+                            <option value="${acc.AccountNo}">
+                                ${acc.AccountType} - ${maskAccount(acc.AccountNo)} (${formatCurrency(acc.Balance)})
+                            </option>
+                        `;
+                    }
+                });
+
+                select.addEventListener('change', (e) => {
+                    const chosen = userAccounts.find(a => a.AccountNo === e.target.value);
+                    if (chosen) {
+                        document.getElementById('sourceBalanceHint').textContent = `Available Balance: ${formatCurrency(chosen.Balance)}`;
+                    }
+                });
+
+            } catch (err) {
+                showAlert('Error loading accounts: ' + err.message, 'danger');
+            }
+        }
+
+        function showAlert(msg, type) {
+            const alert = document.getElementById('alertMsg');
+            alert.textContent = msg;
+            alert.className = `alert alert-${type} small mb-4`;
+            alert.classList.remove('d-none');
+        }
+
+        function openReviewModal() {
+            const fromAccount = document.getElementById('fromAccount').value;
+            const toAccount = document.getElementById('toAccount').value.trim();
+            const amount = parseFloat(document.getElementById('amount').value);
+            const desc = document.getElementById('description').value || 'Fund Transfer';
+
+            if (!fromAccount) {
+                showAlert('Please select a source account.', 'warning');
+                return;
+            }
+            if (!toAccount) {
+                showAlert('Please enter destination account number.', 'warning');
+                return;
+            }
+            if (fromAccount === toAccount) {
+                showAlert('Source and destination accounts cannot be identical.', 'warning');
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                showAlert('Please enter a valid transfer amount greater than $0.', 'warning');
+                return;
+            }
+
+            const senderAcc = userAccounts.find(a => a.AccountNo === fromAccount);
+            if (senderAcc && Number(senderAcc.Balance) < amount) {
+                showAlert(`Insufficient funds. Your available balance is ${formatCurrency(senderAcc.Balance)}.`, 'danger');
+                return;
+            }
+
+            // Fill Review Modal
+            document.getElementById('reviewFromAcc').textContent = `${fromAccount} (${maskAccount(fromAccount)})`;
+            document.getElementById('reviewToAcc').textContent = `${toAccount} (${maskAccount(toAccount)})`;
+            document.getElementById('reviewAmount').textContent = formatCurrency(amount);
+            document.getElementById('reviewDesc').textContent = desc;
+
+            const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            modal.show();
+        }
+
+        async function executeTransfer() {
+            const btn = document.getElementById('confirmTransferBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Executing...';
+
+            const fromAccount = document.getElementById('fromAccount').value;
+            const toAccount = document.getElementById('toAccount').value.trim();
+            const amount = document.getElementById('amount').value;
+            const description = document.getElementById('description').value;
+
+            try {
+                const res = await apiCall('/api/transactions/transfer', 'POST', {
+                    fromAccount,
+                    toAccount,
+                    amount,
+                    description
+                });
+
+                bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+                showAlert(res.message, 'success');
+                showToast('Fund transfer completed successfully!', 'success');
+                document.getElementById('transferForm').reset();
+                populateAccounts(); // refresh balance
+            } catch (err) {
+                bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+                showAlert(err.message, 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Confirm & Send Funds';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateAccounts();
+        });
+    </script>
+</body>
+</html>

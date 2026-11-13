@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History - GlobalTrust Bank</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <div id="navbar-container"></div>
+
+    <main class="container py-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h3 class="fw-bold mb-1" style="color: var(--bank-navy-dark);">
+                    <i class="bi bi-clock-history text-primary me-2"></i>Account Statements & History
+                </h3>
+                <p class="text-muted small mb-0">Detailed chronological record of credits, debits, and transfers.</p>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportStatement()">
+                    <i class="bi bi-download me-1"></i>Export View
+                </button>
+            </div>
+        </div>
+
+        <div class="card bank-card p-4">
+            
+            <!-- Selector Header -->
+            <div class="row g-3 align-items-end mb-4">
+                <div class="col-md-5">
+                    <label class="form-label">Select Account</label>
+                    <select class="form-select" id="accountSelector">
+                        <option value="">Loading accounts...</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Filter Transaction Type</label>
+                    <select class="form-select" id="typeFilter" onchange="applyFilters()">
+                        <option value="">All Transactions</option>
+                        <option value="Deposit">Deposits (+)</option>
+                        <option value="Withdrawal">Withdrawals (-)</option>
+                        <option value="Transfer_In">Transfers Received (+)</option>
+                        <option value="Transfer_Out">Transfers Sent (-)</option>
+                    </select>
+                </div>
+                <div class="col-md-3 text-md-end">
+                    <button class="btn btn-outline-primary w-100" onclick="refreshHistory()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh Statement
+                    </button>
+                </div>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="bank-table-wrapper">
+                <div class="table-responsive">
+                    <table class="table bank-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Txn ID</th>
+                                <th>Date & Time</th>
+                                <th>Movement Type</th>
+                                <th>Description / Reference</th>
+                                <th class="text-end">Amount ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">Please select an account above to load statement.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        requireAuth();
+        const user = getCurrentUser();
+        const customerId = user.customerId || 1;
+        let allTransactions = [];
+
+        async function init() {
+            try {
+                const res = await apiCall(`/api/customers/${customerId}/accounts`);
+                const select = document.getElementById('accountSelector');
+                select.innerHTML = '<option value="" disabled selected>Choose an account to view</option>';
+
+                (res.accounts || []).forEach((acc, idx) => {
+                    select.innerHTML += `
+                        <option value="${acc.AccountNo}" ${idx === 0 ? 'selected' : ''}>
+                            ${acc.AccountType} - ${maskAccount(acc.AccountNo)} (${formatCurrency(acc.Balance)})
+                        </option>
+                    `;
+                });
+
+                select.addEventListener('change', (e) => {
+                    loadHistory(e.target.value);
+                });
+
+                // Auto-load first account if present
+                if (res.accounts && res.accounts.length > 0) {
+                    loadHistory(res.accounts[0].AccountNo);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadHistory(accountNo) {
+            if (!accountNo) return;
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><div class="spinner-border text-primary me-2"></div>Loading transactions...</td></tr>';
+
+            try {
+                const res = await apiCall(`/api/accounts/${accountNo}/transactions`);
+                allTransactions = res.transactions || [];
+                applyFilters();
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${err.message}</td></tr>`;
+            }
+        }
+
+        function applyFilters() {
+            const filterType = document.getElementById('typeFilter').value;
+            const filtered = filterType ? allTransactions.filter(t => t.TransactionType === filterType) : allTransactions;
+            renderTable(filtered);
+        }
+
+        function renderTable(txList) {
+            const tbody = document.getElementById('historyTableBody');
+            if (txList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No transactions found matching criteria.</td></tr>';
+                return;
+            }
+
+            const typeBadges = {
+                'Deposit': { icon: 'bi-box-arrow-in-down', class: 'tx-amount-positive', label: 'Deposit', sign: '+' },
+                'Transfer_In': { icon: 'bi-arrow-down-left', class: 'tx-amount-positive', label: 'Transfer In', sign: '+' },
+                'Withdrawal': { icon: 'bi-box-arrow-up', class: 'tx-amount-negative', label: 'Withdrawal', sign: '-' },
+                'Transfer_Out': { icon: 'bi-arrow-up-right', class: 'tx-amount-negative', label: 'Transfer Out', sign: '-' }
+            };
+
+            tbody.innerHTML = txList.map(t => {
+                const cfg = typeBadges[t.TransactionType] || { icon: 'bi-circle', class: 'text-dark', label: t.TransactionType, sign: '' };
+
+                return `
+                    <tr>
+                        <td class="font-monospace small">#${t.TransactionID}</td>
+                        <td class="text-nowrap small text-muted">${formatDateTime(t.TransactionDate)}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border small">
+                                <i class="bi ${cfg.icon} me-1"></i>${cfg.label}
+                            </span>
+                        </td>
+                        <td class="small text-dark">
+                            ${t.Description || 'Direct Banking Transaction'}
+                            ${t.MaskedReferenceAccountNo ? `<span class="badge bg-light text-muted border ms-1 font-monospace">Ref: ${t.MaskedReferenceAccountNo}</span>` : ''}
+                        </td>
+                        <td class="text-end font-monospace fs-6 ${cfg.class}">
+                            ${cfg.sign} ${formatCurrency(t.Amount)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function refreshHistory() {
+            const accNo = document.getElementById('accountSelector').value;
+            if (accNo) loadHistory(accNo);
+        }
+
+        function exportStatement() {
+            alert('Export generated: Statement download ready. (In production, streams signed PDF statement)');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+        });
+    </script>
+</body>
+</html>

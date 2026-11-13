@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobalTrust Bank - Secure Login</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <div class="container d-flex flex-column justify-content-center align-items-center min-vh-100 py-5">
+        
+        <!-- Bank Brand Header -->
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 p-3 shadow-sm mb-2">
+                <i class="bi bi-bank fs-2"></i>
+            </div>
+            <h2 class="fw-bold mb-1" style="color: var(--bank-navy-dark);">GlobalTrust Bank</h2>
+            <p class="text-muted small mb-0">Database Security & Privacy (DSP) Management System</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="card bank-card shadow-sm border p-4 p-md-5" style="max-width: 440px; width: 100%;">
+            
+            <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                <h5 class="fw-bold mb-0">Account Sign In</h5>
+                <span class="badge bg-light text-secondary border small">DSP Protected</span>
+            </div>
+
+            <!-- Alert Container -->
+            <div id="loginAlert" class="alert d-none small mb-4" role="alert"></div>
+
+            <form id="loginForm" autocomplete="off">
+                
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address / Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted border-end-0">
+                            <i class="bi bi-envelope"></i>
+                        </span>
+                        <input type="email" class="form-control border-start-0 ps-1" id="email" 
+                               placeholder="user@globaltrust.com" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="password" class="form-label mb-0">Password</label>
+                        <span class="text-muted small">Min 12 Chars</span>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted border-end-0">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        <input type="password" class="form-control border-start-0 border-end-0 ps-1" id="password" 
+                               placeholder="••••••••••••" required>
+                        <button type="button" class="btn btn-outline-secondary border-start-0 bg-light" id="togglePasswordBtn" tabindex="-1">
+                            <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-bank-primary py-2 fw-semibold" id="submitBtn">
+                        <i class="bi bi-shield-check me-2"></i>Sign In Securely
+                    </button>
+                </div>
+            </form>
+
+            <!-- Academic Demo Credentials Helper -->
+            <div class="pt-3 border-top">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-semibold">Academic Demonstration Accounts:</span>
+                </div>
+                
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-sm btn-outline-secondary text-start d-flex justify-content-between align-items-center py-1 px-2"
+                            onclick="fillCredentials('admin@globaltrust.com', 'Admin@Secure2026!')">
+                        <span><strong class="text-dark">Admin:</strong> admin@globaltrust.com</span>
+                        <span class="badge bg-danger">Admin</span>
+                    </button>
+                    
+                    <button class="btn btn-sm btn-outline-secondary text-start d-flex justify-content-between align-items-center py-1 px-2"
+                            onclick="fillCredentials('employee@globaltrust.com', 'Employee@Bank2026!')">
+                        <span><strong class="text-dark">Staff:</strong> employee@globaltrust.com</span>
+                        <span class="badge bg-warning text-dark">Employee</span>
+                    </button>
+
+                    <button class="btn btn-sm btn-outline-secondary text-start d-flex justify-content-between align-items-center py-1 px-2"
+                            onclick="fillCredentials('aditya003shukla@gmail.com', 'Customer@Pass2026!')">
+                        <span><strong class="text-dark">Customer:</strong> aditya003shukla@gmail.com</span>
+                        <span class="badge bg-primary">Customer</span>
+                    </button>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        <i class="bi bi-lock-fill me-1"></i>Enforces Argon2id/Bcrypt, 12-char policy, & 5-try lockout
+                    </small>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Check for session expired redirect query
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('session') === 'expired') {
+            const alertBox = document.getElementById('loginAlert');
+            alertBox.className = 'alert alert-warning small mb-4';
+            alertBox.textContent = 'Your session has expired or was revoked. Please log in again.';
+            alertBox.classList.remove('d-none');
+        }
+
+        // Toggle password visibility
+        const toggleBtn = document.getElementById('togglePasswordBtn');
+        const pwdInput = document.getElementById('password');
+        const pwdIcon = document.getElementById('togglePasswordIcon');
+        toggleBtn.addEventListener('click', () => {
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                pwdIcon.className = 'bi bi-eye-slash';
+            } else {
+                pwdInput.type = 'password';
+                pwdIcon.className = 'bi bi-eye';
+            }
+        });
+
+        // Quick demo filler
+        function fillCredentials(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+        }
+
+        // Redirect if already authenticated
+        const currentUser = getCurrentUser();
+        const currentToken = localStorage.getItem('token');
+        if (currentUser && currentToken) {
+            if (currentUser.role === 'Admin') {
+                window.location.href = 'admin-security.html';
+            } else if (currentUser.role === 'Employee') {
+                window.location.href = 'employee-portal.html';
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+
+        // Handle Login Submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('submitBtn');
+            const alertBox = document.getElementById('loginAlert');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Authenticating...';
+            alertBox.classList.add('d-none');
+
+            try {
+                const res = await apiCall('/api/auth/login', 'POST', { email, password });
+
+                if (res.token && res.user) {
+                    localStorage.setItem('token', res.token);
+                    localStorage.setItem('user', JSON.stringify(res.user));
+                    if (res.user.profile) {
+                        localStorage.setItem('customer', JSON.stringify(res.user.profile));
+                    }
+
+                    // If password change is forced (expiration or admin reset)
+                    if (res.mustChangePassword) {
+                        alert('Security Policy Alert: Your password has expired or an administrator initiated a reset. You must update your password now.');
+                    }
+
+                    // Route according to role
+                    if (res.user.role === 'Admin') {
+                        window.location.href = 'admin-security.html';
+                    } else if (res.user.role === 'Employee') {
+                        window.location.href = 'employee-portal.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
+                }
+            } catch (err) {
+                alertBox.className = 'alert alert-danger small mb-4';
+                alertBox.textContent = err.message || 'Login failed.';
+                alertBox.classList.remove('d-none');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-shield-check me-2"></i>Sign In Securely';
+            }
+        });
+    </script>
+</body>
+</html>

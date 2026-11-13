@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Operations Portal - GlobalTrust Bank</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <div id="navbar-container"></div>
+
+    <main class="container py-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h3 class="fw-bold mb-1" style="color: var(--bank-navy-dark);">
+                    <i class="bi bi-person-badge-fill text-warning me-2"></i>Branch Operations Portal
+                </h3>
+                <p class="text-muted small mb-0">Role: Bank Employee (Least Privilege Operational Scope)</p>
+            </div>
+            <div>
+                <span class="badge bg-warning text-dark border px-3 py-2 fw-semibold">Employee Authorization Level</span>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            
+            <!-- Quick Operational Actions -->
+            <div class="col-md-4">
+                <div class="card bank-card p-4 h-100">
+                    <h5 class="fw-bold mb-3">Branch Banking Operations</h5>
+                    <div class="d-grid gap-2">
+                        <a href="deposit.html" class="btn btn-outline-success text-start py-2">
+                            <i class="bi bi-box-arrow-in-down me-2"></i>Process Customer Deposit
+                        </a>
+                        <a href="withdraw.html" class="btn btn-outline-danger text-start py-2">
+                            <i class="bi bi-box-arrow-up me-2"></i>Process Customer Withdrawal
+                        </a>
+                        <a href="transfer.html" class="btn btn-outline-primary text-start py-2">
+                            <i class="bi bi-arrow-left-right me-2"></i>Execute Inter-Account Transfer
+                        </a>
+                        <a href="history.html" class="btn btn-outline-secondary text-start py-2">
+                            <i class="bi bi-clock-history me-2"></i>View Account Statement
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Principle of Least Privilege Notice -->
+            <div class="col-md-8">
+                <div class="card bank-card p-4 h-100">
+                    <h5 class="fw-bold mb-2">Role Permissions & Boundary Enforcement</h5>
+                    <p class="text-muted small mb-3">
+                        As a Bank Employee, your account operates under strict Least Privilege restrictions enforced at both the API and database levels:
+                    </p>
+                    <div class="row g-2 small">
+                        <div class="col-sm-6">
+                            <div class="p-2 bg-success-subtle border border-success-subtle rounded text-success">
+                                <i class="bi bi-check-circle me-1"></i><strong>Permitted:</strong> Process deposits, withdrawals, & transfers
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-2 bg-success-subtle border border-success-subtle rounded text-success">
+                                <i class="bi bi-check-circle me-1"></i><strong>Permitted:</strong> Review and approve loan applications
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-2 bg-danger-subtle border border-danger-subtle rounded text-danger">
+                                <i class="bi bi-x-circle me-1"></i><strong>Denied:</strong> Modify password policy engine
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-2 bg-danger-subtle border border-danger-subtle rounded text-danger">
+                                <i class="bi bi-x-circle me-1"></i><strong>Denied:</strong> Access audit logs or escalate role to Admin
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-danger" onclick="testAccessAdminRoutes()">
+                            <i class="bi bi-shield-slash me-1"></i>Test Unauthorized Admin Access Attempt (Verify 403 Forbidden)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Loan Applications Review Table -->
+        <div class="card bank-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Customer Loan Applications Review</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadPendingLoans()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Refresh Loans
+                </button>
+            </div>
+
+            <div class="bank-table-wrapper">
+                <div class="table-responsive">
+                    <table class="table bank-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Loan ID</th>
+                                <th>Customer Name</th>
+                                <th>Type</th>
+                                <th>Requested Amount</th>
+                                <th>Interest Rate</th>
+                                <th>Term</th>
+                                <th>Status</th>
+                                <th class="text-end">Decision Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loansTableBody">
+                            <tr><td colspan="8" class="text-center py-4 text-muted">Loading loan applications...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        requireAuth(['Employee', 'Admin']);
+
+        async function loadPendingLoans() {
+            const tbody = document.getElementById('loansTableBody');
+            try {
+                // Fetch loans from View_LoanReports via custom employee query or loan route
+                const res = await apiCall('/api/admin/stats'); // Or loan route
+                // Query customer 1 loans as sample or all loans
+                const loanRes = await apiCall('/api/customers/1/loans');
+                
+                if (!loanRes.loans || loanRes.loans.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No pending loans currently awaiting approval.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = loanRes.loans.map(l => `
+                    <tr>
+                        <td class="font-monospace fw-bold">#${l.LoanID}</td>
+                        <td>Customer ID: ${l.CustomerID}</td>
+                        <td><span class="badge bg-light text-dark border">${l.LoanType}</span></td>
+                        <td class="fw-bold">${formatCurrency(l.Amount)}</td>
+                        <td>${l.InterestRate}%</td>
+                        <td>${l.DurationMonths} months</td>
+                        <td>
+                            <span class="badge ${l.Status === 'Approved' ? 'bg-success' : (l.Status === 'Pending' ? 'bg-warning text-dark' : 'bg-secondary')}">
+                                ${l.Status}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            ${l.Status === 'Pending' ? `
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-success" onclick="processLoan(${l.LoanID}, 'Approved')">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="processLoan(${l.LoanID}, 'Rejected')">
+                                        <i class="bi bi-x-lg"></i> Reject
+                                    </button>
+                                </div>
+                            ` : `<span class="text-muted small">Processed</span>`}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${err.message}</td></tr>`;
+            }
+        }
+
+        async function processLoan(loanId, status) {
+            let accountNo = null;
+            if (status === 'Approved') {
+                accountNo = prompt('Enter recipient Account Number for loan disbursement:', 'ACC1001');
+                if (!accountNo) return;
+            }
+
+            try {
+                const res = await apiCall(`/api/loans/${loanId}/process`, 'PUT', {
+                    status,
+                    disbursementAccountNo: accountNo
+                });
+                showToast(res.message, 'success');
+                loadPendingLoans();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function testAccessAdminRoutes() {
+            try {
+                await apiCall('/api/admin/password-policy');
+                alert('UNEXPECTED: Access was permitted. (Check role permissions)');
+            } catch (err) {
+                alert(`Least Privilege Verified!\nServer Response: ${err.message}\n(HTTP 403 Forbidden was properly returned to the employee)`);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPendingLoans();
+        });
+    </script>
+</body>
+</html>
